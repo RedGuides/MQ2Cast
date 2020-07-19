@@ -1,6 +1,6 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=//
-// Projet: MQ2Cast.cpp    | Set DEBUGGING to true for DEBUGGING msg
-// Author: s0rCieR        | 
+// Project: MQ2Cast.cpp   | Set DEBUGGING to true for DEBUGGING msg
+// Author: s0rCieR        |
 //         A_Enchanter_00 |
 //         htw            |
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=//
@@ -27,17 +27,14 @@
 // 11.3 - SwiftyMUSE 11-17-2019 - Fixed: Casting interrupted identification on Live
 // 11.4 - EqMule 06-01-2020 - Fixed: Casting fizzled and interrupted identifications on Live
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=//
+#include <mq/Plugin.h>
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=//
+#include "../../Blech/Blech.h"
 
-bool DEBUGGING = false;
-
-#ifndef PLUGIN_API
-#include "../MQ2Plugin.h"
-#include "../Blech/Blech.h"
 PreSetup("MQ2Cast");
 PLUGIN_VERSION(11.4);
-#endif
+
+bool DEBUGGING = false;
 
 #define         DELAY_CAST    16000
 #define         DELAY_STOP     4000
@@ -65,16 +62,16 @@ PLUGIN_VERSION(11.4);
 #define         CAST_ABORTED     19
 #define         CAST_UNKNOWN     20
 
-#define         FLAG_COMPLETE     0 
+#define         FLAG_COMPLETE     0
 #define         FLAG_REQUEST     -1
-#define         FLAG_PROGRESS1   -2 
-#define         FLAG_PROGRESS2   -3 
-#define         FLAG_PROGRESS3   -4 
-#define         FLAG_PROGRESS4   -5 
+#define         FLAG_PROGRESS1   -2
+#define         FLAG_PROGRESS2   -3
+#define         FLAG_PROGRESS3   -4
+#define         FLAG_PROGRESS4   -5
 
 #define         DONE_COMPLETE    -3
-#define         DONE_ABORTED     -2 
-#define         DONE_PROGRESS    -1 
+#define         DONE_ABORTED     -2
+#define         DONE_PROGRESS    -1
 #define         DONE_SUCCESS      0
 
 #define         TYPE_SPELL        1
@@ -110,19 +107,19 @@ ULONGLONG    CastingP = 0;              // Casting Pulse
 long         TargI = 0;                 // Target ID
 long         TargC = 0;                 // Target Current
 
-long         StopF = FLAG_COMPLETE;     // Stop Event Flag Progress? 
-long         StopE = DONE_SUCCESS;      // Stop Event Exit Value 
-ULONGLONG    StopM = 0;                 // Stop Event Mark 
+long         StopF = FLAG_COMPLETE;     // Stop Event Flag Progress?
+long         StopE = DONE_SUCCESS;      // Stop Event Exit Value
+ULONGLONG    StopM = 0;                 // Stop Event Mark
 
-long         MoveA = FLAG_COMPLETE;     // Move Event AdvPath? 
-long         MoveS = FLAG_COMPLETE;     // Move Event Stick? 
+long         MoveA = FLAG_COMPLETE;     // Move Event AdvPath?
+long         MoveS = FLAG_COMPLETE;     // Move Event Stick?
 long         MoveN = FLAG_COMPLETE;     // Move Event Nav?
 long         MoveF = FLAG_COMPLETE;     // Move Event MQ2AdvPath Following?
 long         MoveP = FLAG_COMPLETE;     // Move Event MQ2AdvPath Pathing?
 
-long         MemoF = FLAG_COMPLETE;     // Memo Event Flag 
-long         MemoE = DONE_SUCCESS;      // Memo Event Exit 
-ULONGLONG    MemoM = 0;                 // Memo Event Mark 
+long         MemoF = FLAG_COMPLETE;     // Memo Event Flag
+long         MemoE = DONE_SUCCESS;      // Memo Event Exit
+ULONGLONG    MemoM = 0;                 // Memo Event Mark
 
 long         ItemF = FLAG_COMPLETE;     // Item Flag
 long         ItemA[NUM_INV_SLOTS];      // Item Arrays
@@ -157,8 +154,8 @@ Blech        LIST289('#');              // BTree List for OnChat Message on Colo
 Blech        UNKNOWN('#');              // BTree List for OnChat Message on UNKNOWN Yet Color
 Blech        SUCCESS('#');              // BTree List for OnChat Message on SUCCESS Detection
 
-PCONTENTS    fPACK = 0;                 // ItemFound/ItemSearch - Find Pack Contents
-PCONTENTS    fITEM = 0;                 // ItemFound/ItemSearch - Find Item Contents
+CONTENTS*    fPACK = 0;                 // ItemFound/ItemSearch - Find Pack Contents
+CONTENTS*    fITEM = 0;                 // ItemFound/ItemSearch - Find Item Contents
 long         fSLOT = 0;                 // ItemFound/ItemSearch - Find Item SlotID
 long         SwapSlot = 0;              // Item Swapped to slot#
 int          PulseCount = 0;
@@ -169,7 +166,7 @@ int          fTYPE;                     // SpellFind - Casting Type
 int          fTIME;                     // SpellFind - Casting Time
 PCHAR        fNAME;                     // SpellFind - Casting Name
 
-SPELLFAVORITE SpellToMemorize;          // Favorite Spells Array
+SpellLoadout  SpellToMemorize;          // Favorite Spells Array
 long          SpellTotal;               // Favorite Spells Total
 void WinClick(CXWnd *Wnd, PCHAR ScreenID, PCHAR ClickNotification, DWORD KeyState);
 void ClickBack();
@@ -187,7 +184,7 @@ void __stdcall CastEvent(unsigned int ID, void *pData, PBLECHVALUE pValues)
 		CastingE = (long)pData;
 	}
 	if (DEBUGGING) {
-		WriteChatf("[%I64u] MQ2Cast:[OnChat]: Result=[%d] Called=[%d].", GetTickCount642(), CastingE, (long)pData);
+		WriteChatf("[%I64u] MQ2Cast:[OnChat]: Result=[%d] Called=[%d].", GetTickCount64(), CastingE, (long)pData);
 	}
 }
 
@@ -201,16 +198,16 @@ PALTABILITY AltAbility(PCHAR ID)
 		int Number = IsNumber(ID);
 		int Values = atoi(ID);
 		for (DWORD nAbility = 0; nAbility < AA_CHAR_MAX_REAL; nAbility++) {
-			if (GetCharInfo2()->AAList[nAbility].AAIndex) {
+			if (GetPcProfile()->AAList[nAbility].AAIndex) {
 				if (Number) {
-					if (PALTABILITY pAbility = GetAAByIdWrapper(GetCharInfo2()->AAList[nAbility].AAIndex)) {
+					if (PALTABILITY pAbility = GetAAByIdWrapper(GetPcProfile()->AAList[nAbility].AAIndex)) {
 						if (pAbility->ID == Values) {
 							return pAbility;
 						}
 					}
 				} else {
-					if (PALTABILITY pAbility = GetAAByIdWrapper(GetCharInfo2()->AAList[nAbility].AAIndex,level)) {
-						if (PCHAR pName = pCDBStr->GetString(pAbility->nName, 1, NULL)) {
+					if (PALTABILITY pAbility = GetAAByIdWrapper(GetPcProfile()->AAList[nAbility].AAIndex,level)) {
+						if (const char* pName = pCDBStr->GetString(pAbility->nName, eAltAbilityName, NULL)) {
 							if (!_stricmp(ID, pName)) {
 								return pAbility;
 							}
@@ -247,7 +244,7 @@ void Cast(PCHAR zFormat, ...)
 long CastingLeft()
 {
 	long CL = 0;
-	if (pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible()) {
+	if (pCastingWnd && pCastingWnd->IsVisible()) {
 		CL = GetCharInfo()->pSpawn->CastingData.SpellETA - GetCharInfo()->pSpawn->TimeStamp;
 		if (CL<1) {
 			CL = 1;
@@ -269,10 +266,7 @@ long Evaluate(PCHAR zFormat, ...)
 void CastTimer(int TargetID, int SpellID, long TickE)
 {
 	typedef VOID(__cdecl *CastTimerCALL) (int, int, long);
-	PMQPLUGIN pLook = pPlugins;
-	while (pLook && _strnicmp(pLook->szFilename, "MQ2Casttimer", 11)) {
-		pLook = pLook->pNext;
-	}
+	MQPlugin* pLook = GetPlugin("MQ2Casttimer");
 	if (pLook && pLook->fpVersion>1.1100) {
 		if (CastTimerCALL Request = (CastTimerCALL)GetProcAddress(pLook->hModule, "TimerCastHandle")) {
 			Request(TargetID, SpellID, TickE);
@@ -292,7 +286,7 @@ void Execute(PCHAR zFormat, ...)
 
 void ExecuteDly(PCHAR zFormat, ...)
 {
-	//char zOutput[MAX_STRING]={0}; 
+	//char zOutput[MAX_STRING]={0};
 	if (cPendingEq) {
 		MacroError("MQ2Cast: There is already an item pending to cast.");
 		return;
@@ -302,14 +296,14 @@ void ExecuteDly(PCHAR zFormat, ...)
 	if (!zOutputDly[0]) {
 		return;
 	}
-	ulTimer = GetTickCount642() + EX_DELAY;
+	ulTimer = GetTickCount64() + EX_DELAY;
 	cPendingEq = true;
 	//DoCommand(GetCharInfo()->pSpawn,zOutput);
 }
 
 bool Flags()
 {
-	if (!BardClass() && pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible()) {
+	if (!BardClass() && pCastingWnd && pCastingWnd->IsVisible()) {
 		if (DEBUGGING) {
 			WriteChatf("MQ2Cast: pCastingWnd=TRUE");
 		}
@@ -341,7 +335,7 @@ long GEMID(LONG ID)
 bool GEMReady(LONG ID)
 {
 	if (GetSpellByID(GetMemorizedSpell(ID))) {
-		if (((PCDISPLAY)pDisplay)->TimeStamp >((PSPAWNINFO)pLocalPlayer)->SpellGemETA[ID] && (int)((PCDISPLAY)pDisplay)->TimeStamp > ((PSPAWNINFO)pLocalPlayer)->GetSpellCooldownETA()) {
+		if (pDisplay->TimeStamp > pLocalPlayer->SpellGemETA[ID] && (int)pDisplay->TimeStamp > pLocalPlayer->GetSpellCooldownETA()) {
 			return true;
 		}
 	}
@@ -351,7 +345,7 @@ bool GEMReady(LONG ID)
 bool GiftOfMana()
 {
 	for (unsigned long nBuff = 0; nBuff < 35; nBuff++) {
-		if (PSPELL pSpell = GetSpellByID(GetCharInfo2()->ShortBuff[nBuff].SpellID)) {
+		if (PSPELL pSpell = GetSpellByID(GetPcProfile()->ShortBuff[nBuff].SpellID)) {
 			if (!_stricmp("Gift of Mana", pSpell->Name)) {
 				return true;
 			}
@@ -393,12 +387,12 @@ void Success(PSPELL Cast)
 		char Temps[MAX_STRING];
 		bool Added = false;
 		/*CastByMe,CastByOther,CastOnYou,CastOnAnother,WearOff*/
-		if (char*str = GetSpellString(Cast->ID,2)) { 
+		if (const char* str = GetSpellString(Cast->ID,2)) {
 			sprintf_s(Temps, "%s#*#", str);
 			aCastEvent(SUCCESS, CAST_SUCCESS, Temps);
 			Added = true;
 		}
-		if (char*str = GetSpellString(Cast->ID,3)) { 
+		if (const char* str = GetSpellString(Cast->ID,3)) {
 			sprintf_s(Temps, "#*#%s#*#", str);
 			aCastEvent(SUCCESS, CAST_SUCCESS, Temps);
 			Added = true;
@@ -414,11 +408,11 @@ void Success(PSPELL Cast)
 
 bool Moving()
 {
-	ULONGLONG MyTimer = GetTickCount642();
+	ULONGLONG MyTimer = GetTickCount64();
 	if (Speed() != 0.0f) {
 		ImmobileT = MyTimer + 500;
 	}
-	return (!MQ2Globals::gbMoving && (!ImmobileT || MyTimer>ImmobileT));
+	return (!gbMoving && (!ImmobileT || MyTimer>ImmobileT));
 }
 
 CXWnd*TributeMasterWnd = 0;
@@ -429,19 +423,19 @@ BOOL Paused()
 	if (BardClass()) {
 		return false;
 	}
-	if (pLootWnd && (PCSIDLWND)pLootWnd->IsVisible()) {
+	if (pLootWnd && pLootWnd->IsVisible()) {
 		return true;
 	}
-	if (pBankWnd && (PCSIDLWND)pBankWnd->IsVisible()) {
+	if (pBankWnd && pBankWnd->IsVisible()) {
 		return true;
 	}
-	if (pMerchantWnd && (PCSIDLWND)pMerchantWnd->IsVisible()) {
+	if (pMerchantWnd && pMerchantWnd->IsVisible()) {
 		return true;
 	}
-	if (pTradeWnd && (PCSIDLWND)pTradeWnd->IsVisible()) {
+	if (pTradeWnd && pTradeWnd->IsVisible()) {
 		return true;
 	}
-	if (pGiveWnd && (PCSIDLWND)pGiveWnd->IsVisible()) {
+	if (pGiveWnd && pGiveWnd->IsVisible()) {
 		return true;
 	}
 	//calling Open is super cpu expensive
@@ -466,15 +460,15 @@ BOOL Paused()
 void Reset() {
 	TargI = 0;                 // Target ID
 	TargC = 0;                 // Target Check ID
-	StopF = FLAG_COMPLETE;     // Stop Event Flag Progress? 
-	StopE = DONE_SUCCESS;      // Stop Event Exit Value 
-	MoveA = FLAG_COMPLETE;     // Stop Event AdvPath? 
-    MoveN = FLAG_COMPLETE;     // Stop Event Nav?
-	MoveS = FLAG_COMPLETE;     // Stop Event Stick? 
+	StopF = FLAG_COMPLETE;     // Stop Event Flag Progress?
+	StopE = DONE_SUCCESS;      // Stop Event Exit Value
+	MoveA = FLAG_COMPLETE;     // Stop Event AdvPath?
+	MoveN = FLAG_COMPLETE;     // Stop Event Nav?
+	MoveS = FLAG_COMPLETE;     // Stop Event Stick?
 	MoveF = FLAG_COMPLETE;     // Stop Event MQ2AdvPath Following?
 	MoveP = FLAG_COMPLETE;     // Stop Event MQ2AdvPath Pathing?
-	MemoF = FLAG_COMPLETE;     // Memo Event Flag 
-	MemoE = DONE_SUCCESS;      // Memo Event Exit 
+	MemoF = FLAG_COMPLETE;     // Memo Event Flag
+	MemoE = DONE_SUCCESS;      // Memo Event Exit
 	ItemF = FLAG_COMPLETE;     // Item Flag
 	DuckF = FLAG_COMPLETE;     // Duck Flag
 	CastF = FLAG_COMPLETE;     // Cast Flag
@@ -490,7 +484,7 @@ void Reset() {
 	CastR = 1;                 // Cast Retry Counter
 	CastW = 0;                 // Cast Retry Type
 	Invisible = false;         // Invisibility Check?
-	ZeroMemory(&SpellToMemorize, sizeof(SPELLFAVORITE));
+	ZeroMemory(&SpellToMemorize, sizeof(SpellLoadout));
 	strcpy_s(SpellToMemorize.Name, "Mem a Spell");
 	SpellToMemorize.inuse = 1;
 	for (int sp = 0; sp<NUM_SPELL_GEMS; sp++) {
@@ -520,14 +514,14 @@ PSPELL SpellBook(PCHAR ID)
 		if (IsNumber(ID)) {
 			int Number = atoi(ID);
 			for (DWORD nSpell = 0; nSpell < NUM_BOOK_SLOTS; nSpell++) {
-				if (GetCharInfo2()->SpellBook[nSpell] == Number) {
+				if (GetPcProfile()->SpellBook[nSpell] == Number) {
 					return GetSpellByID(Number);
 				}
 			}
 		}
 		else {
 			for (DWORD nSpell = 0; nSpell < NUM_BOOK_SLOTS; nSpell++) {
-				if (PSPELL pSpell = GetSpellByID(GetCharInfo2()->SpellBook[nSpell])) {
+				if (PSPELL pSpell = GetSpellByID(GetPcProfile()->SpellBook[nSpell])) {
 					if (!_stricmp(ID, pSpell->Name)) {
 						return pSpell;
 					}
@@ -542,7 +536,7 @@ bool ItemSearch(PCHAR szItemName, long B, long E)
 {
 	//can it ever be a number?
 	//I dont see any calls to it where it is...
-	PCONTENTS pItem = 0;
+	CONTENTS* pItem = 0;
 	if (IsNumber(szItemName)) {
 		pItem = FindItemByID(atoi(szItemName));
 		//return ItemFound(atoi(szItemName),B,E);
@@ -551,10 +545,10 @@ bool ItemSearch(PCHAR szItemName, long B, long E)
 		pItem = FindItemByName(szItemName, 1);
 	}
 	if (pItem) {
-		fSLOT = pItem->GetGlobalIndex().Index.Slot1;
+		fSLOT = pItem->GetGlobalIndex().Index.GetSlot(0);
 		fITEM = pItem;
 		fPACK = NULL;
-		if (PCONTENTS pPack = FindItemBySlot(pItem->GetGlobalIndex().Index.Slot1)) {
+		if (CONTENTS* pPack = FindItemBySlot(pItem->GetGlobalIndex().Index.GetSlot(0))) {
 			if (GetItemFromContents(pPack)->Type == ITEMTYPE_PACK) {
 				fPACK = pPack;
 			}
@@ -632,15 +626,15 @@ long SpellTimer(long Type, void *Data)
 	}
 	case TYPE_ALT:
 	{
-		if (pAltAdvManager->GetCalculatedTimer(pPCData, (PALTABILITY)Data)>0) {
-			pAltAdvManager->IsAbilityReady(pPCData, (PALTABILITY)Data, &Ready);
+		if (pAltAdvManager->GetCalculatedTimer((PcClient*)pPCData, (PALTABILITY)Data)>0) {
+			pAltAdvManager->IsAbilityReady((PcClient*)pPCData, (PALTABILITY)Data, &Ready);
 			return (Ready<1) ? 0 : Ready * 1000;
 		}
 		return 999999;
 	}
 	case TYPE_ITEM:
 	{
-		return GetItemTimer((PCONTENTS)Data) * 1000;
+		return GetItemTimer((CONTENTS*)Data) * 1000;
 	}
 	}
 	return 999999;
@@ -679,10 +673,7 @@ void Stick(PCHAR zFormat, ...)
 	typedef VOID(__cdecl *StickCALL) (PSPAWNINFO, PCHAR);
 	char zOutput[MAX_STRING]; va_list vaList; va_start(vaList, zFormat);
 	vsprintf_s(zOutput, zFormat, vaList);
-	PMQPLUGIN pLook = pPlugins;
-	while (pLook && _strnicmp(pLook->szFilename, "MQ2MoveUtils", 12)) {
-		pLook = pLook->pNext;
-	}
+	MQPlugin* pLook = GetPlugin("MQ2MoveUtils");
 	if (pLook && pLook->fpVersion>0.9999 && pLook->RemoveSpawn) {
 		if (StickCALL Request = (StickCALL)GetProcAddress(pLook->hModule, "StickCommand")) {
 			Request(GetCharInfo()->pSpawn, zOutput);
@@ -695,10 +686,7 @@ void FollowPath(PCHAR zFormat, ...)
 	typedef VOID(__cdecl *FollowCALL) (PSPAWNINFO, PCHAR);
 	char zOutput[MAX_STRING]; va_list vaList; va_start(vaList, zFormat);
 	vsprintf_s(zOutput, zFormat, vaList);
-	PMQPLUGIN pLook = pPlugins;
-	while (pLook && _strnicmp(pLook->szFilename, "MQ2AdvPath", 10)) {
-		pLook = pLook->pNext;
-	}
+	MQPlugin* pLook = GetPlugin("MQ2AdvPath");
 	if (pLook && pLook->fpVersion>0.999 && pLook->RemoveSpawn) {
 		if (FollowCALL Request = (FollowCALL)GetProcAddress(pLook->hModule, "MQFollowCommand")) {
 			Request(GetCharInfo()->pSpawn, zOutput);
@@ -710,10 +698,7 @@ void Path(PCHAR zFormat, ...)
 	typedef VOID(__cdecl *FollowCALL) (PSPAWNINFO, PCHAR);
 	char zOutput[MAX_STRING]; va_list vaList; va_start(vaList, zFormat);
 	vsprintf_s(zOutput, zFormat, vaList);
-	PMQPLUGIN pLook = pPlugins;
-	while (pLook && _strnicmp(pLook->szFilename, "MQ2AdvPath", 10)) {
-		pLook = pLook->pNext;
-	}
+	MQPlugin* pLook = GetPlugin("MQ2AdvPath");
 	if (pLook && pLook->fpVersion>0.999 && pLook->RemoveSpawn) {
 		if (FollowCALL Request = (FollowCALL)GetProcAddress(pLook->hModule, "MQPlayCommand")) {
 			Request(GetCharInfo()->pSpawn, zOutput);
@@ -751,14 +736,15 @@ public:
 		TypeMember(Taken);
 		TypeMember(Ready);
 	}
-	bool GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index, MQ2TYPEVAR &Dest) {
-		PMQ2TYPEMEMBER pMember = MQ2CastType::FindMember(Member);
+
+	virtual bool GetMember(MQVarPtr VarPtr, const char* Member, char* Index, MQTypeVar &Dest) override {
+		MQTypeMember* pMember = MQ2CastType::FindMember(Member);
 		if (pMember) {
 			switch ((CastMembers)pMember->ID)
 			{
 			case Active:
 				Dest.DWord = (gbInZone);
-				Dest.Type = pBoolType;
+				Dest.Type = mq::datatypes::pBoolType;
 				return true;
 			case Effect:
 				Dest.DWord = GetCharInfo()->pSpawn->CastingData.SpellID;
@@ -767,22 +753,22 @@ public:
 				}
 				if ((long)Dest.DWord != NOID) {
 					Dest.Ptr = GetSpellByID(Dest.DWord);
-					Dest.Type = pSpellType;
+					Dest.Type = mq::datatypes::pSpellType;
 				}
 				return true;
 			case Stored:
 				if (CastingL != NOID) {
 					Dest.Ptr = GetSpellByID(CastingL);
-					Dest.Type = pSpellType;
+					Dest.Type = mq::datatypes::pSpellType;
 				}
 				return true;
 			case Timing:
 				Dest.DWord = (DWORD)CastingLeft();
-				Dest.Type = pIntType;
+				Dest.Type = mq::datatypes::pIntType;
 				return true;
 			case Status:
 				Temps[0] = '\0';
-				if (CastingC != NOID || CastF != FLAG_COMPLETE || (pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible())) {
+				if (CastingC != NOID || CastF != FLAG_COMPLETE || (pCastingWnd && pCastingWnd->IsVisible())) {
 					strcat_s(Temps, "C");
 				}
 				if (StopF != FLAG_COMPLETE) strcat_s(Temps, "S");
@@ -798,7 +784,7 @@ public:
 					strcat_s(Temps, "I");
 				}
 				Dest.Ptr = Temps;
-				Dest.Type = pStringType;
+				Dest.Type = mq::datatypes::pStringType;
 				return true;
 			case Result:
 			case Return:
@@ -829,37 +815,37 @@ public:
 				default:                strcpy_s(Temps, "CAST_NEEDFIXTYPE"); break;
 				}
 				Dest.Ptr = Temps;
-				Dest.Type = pStringType;
+				Dest.Type = mq::datatypes::pStringType;
 				return true;
 			case Ready:
 				Dest.DWord = (gbInZone && !Flags() && !Paused() && (pSpellBookWnd && !pSpellBookWnd->IsVisible()) && !(GetCharInfo()->Stunned) && SpellReady(Index));
-				Dest.Type = pBoolType;
+				Dest.Type = mq::datatypes::pBoolType;
 				return true;
 			case Taken:
 				Dest.DWord = (CastingX == CAST_TAKEHOLD);
-				Dest.Type = pBoolType;
+				Dest.Type = mq::datatypes::pBoolType;
 				return true;
 			}
 		}
 		strcpy_s(Temps, "NULL");
-		Dest.Type = pStringType;
+		Dest.Type = mq::datatypes::pStringType;
 		Dest.Ptr = Temps;
 		return true;
 	}
-	bool ToString(MQ2VARPTR VarPtr, PCHAR Destination) {
+	bool ToString(MQVarPtr VarPtr, PCHAR Destination) {
 		strcpy_s(Destination, MAX_STRING, "TRUE");
 		return true;
 	}
-	bool FromData(MQ2VARPTR &VarPtr, MQ2TYPEVAR &Source) {
+	bool FromData(MQVarPtr& VarPtr, MQTypeVar& Source) {
 		return false;
 	}
-	bool FromString(MQ2VARPTR &VarPtr, PCHAR Source) {
+	virtual bool FromString(MQVarPtr& VarPtr, const char* Source) override {
 		return false;
 	}
 	~MQ2CastType() {}
 };
 
-BOOL dataCast(PCHAR szName, MQ2TYPEVAR &Dest)
+bool dataCast(const char* szName, MQTypeVar& Dest)
 {
 	Dest.DWord = 1;
 	Dest.Type = pCastType;
@@ -872,35 +858,35 @@ void StopEnding()
 {
 	if (MoveS != FLAG_COMPLETE) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Stick UnPause Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Stick UnPause Request.", GetTickCount64());
 		}
 		Stick("unpause");
 		MoveS = FLAG_COMPLETE;
 	}
 	if (MoveA != FLAG_COMPLETE) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: AdvPath UnPause Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: AdvPath UnPause Request.", GetTickCount64());
 		}
 		Execute("/varcalc PauseFlag 0");
 		MoveA = FLAG_COMPLETE;
 	}
-    if (MoveN != FLAG_COMPLETE) {
+	if (MoveN != FLAG_COMPLETE) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2Nav UnPause Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2Nav UnPause Request.", GetTickCount64());
 		}
-        Execute("/nav pause");
-        MoveN = FLAG_COMPLETE;
-    }
+		Execute("/nav pause");
+		MoveN = FLAG_COMPLETE;
+	}
 	if (MoveF != FLAG_COMPLETE) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath UnPause Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath UnPause Request.", GetTickCount64());
 		}
 		FollowPath("unpause");
 		MoveF = FLAG_COMPLETE;
 	}
 	if (MoveP != FLAG_COMPLETE) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath UnPause Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath UnPause Request.", GetTickCount64());
 		}
 		Path("unpause");
 		MoveP = FLAG_COMPLETE;
@@ -911,15 +897,15 @@ void StopHandle()
 {
 	if (StopF == FLAG_REQUEST) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Request.", GetTickCount64());
 		}
-		StopM = GetTickCount642() + DELAY_STOP;
+		StopM = GetTickCount64() + DELAY_STOP;
 		StopF = FLAG_PROGRESS1;
 		StopE = DONE_PROGRESS;
 	}
 	if (Evaluate("${If[${Stick.Status.Equal[ON]},1,0]}")) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Stick Pause Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Stick Pause Request.", GetTickCount64());
 		}
 		Stick("pause");
 		MoveS = FLAG_PROGRESS1;
@@ -928,35 +914,35 @@ void StopHandle()
 		//looks like AdvPath.inc is loaded... ok then, fine we will check its tlo...
 		if (Evaluate("${If[${Bool[${FollowFlag}]},1,0]}")) {
 			if (DEBUGGING) {
-				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: AdvPath Pause Request.", GetTickCount642());
+				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: AdvPath Pause Request.", GetTickCount64());
 			}
 			Execute("/varcalc PauseFlag 1");
 			MoveA = FLAG_PROGRESS1;
 		}
 	}
-    if (auto dtNavigation = FindMQ2DataType("Navigation")) {
-        MQ2TYPEVAR Active, Paused;
-        dtNavigation->GetMember(Active.VarPtr, "Active", "", Active);
-        dtNavigation->GetMember(Paused.VarPtr, "Paused", "", Paused);
-        if (Active.DWord && !Paused.DWord) {
-            if (DEBUGGING) {
-                WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2Nav Pause Request.", GetTickCount642());
-            }
-            Execute("/nav pause");
-            MoveN = FLAG_PROGRESS1;
-        }
-    }
+	if (auto dtNavigation = FindMQ2DataType("Navigation")) {
+		MQTypeVar Active, Paused;
+		dtNavigation->GetMember(Active.VarPtr, "Active", "", Active);
+		dtNavigation->GetMember(Paused.VarPtr, "Paused", "", Paused);
+		if (Active.DWord && !Paused.DWord) {
+			if (DEBUGGING) {
+				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2Nav Pause Request.", GetTickCount64());
+			}
+			Execute("/nav pause");
+			MoveN = FLAG_PROGRESS1;
+		}
+	}
 	if (FindMQ2DataType("AdvPath")) {
 		if (Evaluate("${If[${AdvPath.Following} && !${AdvPath.Paused},1,0]}")) {
 			if (DEBUGGING) {
-				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath Pause Request.", GetTickCount642());
+				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath Pause Request.", GetTickCount64());
 			}
 			FollowPath("pause");
 			MoveF = FLAG_PROGRESS1;
 		}
 		if (Evaluate("${If[${AdvPath.Playing} && !${AdvPath.Paused},1,0]}")) {
 			if (DEBUGGING) {
-				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath Pause Request.", GetTickCount642());
+				WriteChatf("[%I64u] MQ2Cast:[Immobilize]: MQ2AdvPath Pause Request.", GetTickCount64());
 			}
 			Path("pause");
 			MoveP = FLAG_PROGRESS1;
@@ -964,13 +950,13 @@ void StopHandle()
 	}
 	if (Immobile = Moving()) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Complete.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Complete.", GetTickCount64());
 		}
 		StopF = FLAG_COMPLETE;
 		StopE = DONE_SUCCESS;
 	}
-	if (GetTickCount642() > StopM) {
-		WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Aborting!", GetTickCount642());
+	if (GetTickCount64() > StopM) {
+		WriteChatf("[%I64u] MQ2Cast:[Immobilize]: Aborting!", GetTickCount64());
 		StopF = FLAG_COMPLETE;
 		StopE = DONE_ABORTED;
 		return;
@@ -978,8 +964,8 @@ void StopHandle()
 	if (StopF == FLAG_PROGRESS1) {
 		StopF = FLAG_PROGRESS2;
 		if (Speed() != 0.0f) {
-			MQ2Globals::ExecuteCmd(FindMappableCommand("back"), 1, 0);
-			MQ2Globals::ExecuteCmd(FindMappableCommand("back"), 0, 0);
+			ExecuteCmd(FindMappableCommand("back"), 1, 0);
+			ExecuteCmd(FindMappableCommand("back"), 0, 0);
 		}
 	}
 }
@@ -992,7 +978,7 @@ void MemoHandle()
 	else {
 		bool Complete = true;
 		for (int sp = 0; sp<NUM_SPELL_GEMS; sp++) {
-			if (SpellToMemorize.SpellId[sp] != 0xFFFFFFFF && SpellToMemorize.SpellId[sp] != GetCharInfo2()->MemorizedSpells[sp]) {
+			if (SpellToMemorize.SpellId[sp] != 0xFFFFFFFF && SpellToMemorize.SpellId[sp] != GetPcProfile()->MemorizedSpells[sp]) {
 				Complete = false;
 				break;
 			}
@@ -1000,14 +986,14 @@ void MemoHandle()
 		if (!Complete) {
 			if (MemoF == FLAG_REQUEST) {
 				if (DEBUGGING) {
-					WriteChatf("[%I64u] MQ2Cast:[Memorize]: Immobilize.", GetTickCount642());
+					WriteChatf("[%I64u] MQ2Cast:[Memorize]: Immobilize.", GetTickCount64());
 				}
 				MemoF = FLAG_PROGRESS1;
 				MemoE = DONE_PROGRESS;
 				if (GetCharInfo()->pSpawn->Level<4 && DELAY_MEMO<15000) {
 					DELAY_MEMO = 15000;
 				}
-				MemoM = GetTickCount642() + DELAY_STOP + DELAY_MEMO*SpellTotal;
+				MemoM = GetTickCount64() + DELAY_STOP + DELAY_MEMO*SpellTotal;
 				if (StopF == FLAG_COMPLETE) {
 					StopE = DONE_SUCCESS;
 				}
@@ -1020,31 +1006,31 @@ void MemoHandle()
 			}
 			if (MemoF == FLAG_PROGRESS1 && StopE == DONE_SUCCESS) {
 				if (DEBUGGING) {
-					WriteChatf("[%I64u] MQ2Cast:[Memorize]: Spell(s).", GetTickCount642());
+					WriteChatf("[%I64u] MQ2Cast:[Memorize]: Spell(s).", GetTickCount64());
 				}
 				MemoF = FLAG_PROGRESS2;
 				DWORD Favorite = (DWORD)&SpellToMemorize;
 				pSpellBookWnd->MemorizeSet((int*)Favorite, NUM_SPELL_GEMS);
 			}
-			if (StopE == DONE_ABORTED || GetTickCount642()>MemoM) {
+			if (StopE == DONE_ABORTED || GetTickCount64()>MemoM) {
 				MemoE = DONE_ABORTED;
 			}
 		}
 		else {
 			if (DEBUGGING) {
-				WriteChatf("[%I64u] MQ2Cast:[Memorize]: Complete.", GetTickCount642());
+				WriteChatf("[%I64u] MQ2Cast:[Memorize]: Complete.", GetTickCount64());
 			}
 			MemoF = FLAG_COMPLETE;
 			MemoE = DONE_SUCCESS;
 		}
 	}
 	if (MemoE == DONE_ABORTED || !pSpellBookWnd) {
-		WriteChatf("[%I64u] MQ2Cast:[Memorize]: Aborting!", GetTickCount642());
+		WriteChatf("[%I64u] MQ2Cast:[Memorize]: Aborting!", GetTickCount64());
 		MemoF = FLAG_COMPLETE;
 	}
-	if (MemoF == FLAG_COMPLETE && (pSpellBookWnd && (PCSIDLWND)pSpellBookWnd->IsVisible())) {
+	if (MemoF == FLAG_COMPLETE && (pSpellBookWnd && pSpellBookWnd->IsVisible())) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Memorize]: Closebook.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Memorize]: Closebook.", GetTickCount64());
 		}
 		Execute("/book");
 	}
@@ -1053,7 +1039,7 @@ void MemoHandle()
 void DuckHandle(int flag)
 {
 	if (DEBUGGING) {
-		WriteChatf("[%I64u] MQ2Cast:[Duck]: StopCast.", GetTickCount642());
+		WriteChatf("[%I64u] MQ2Cast:[Duck]: StopCast.", GetTickCount64());
 	}
 	Execute("/stopcast");
 	CastingE = CAST_ABORTED;
@@ -1066,7 +1052,7 @@ void CastHandle()
 	// we got the casting request cookies, request immobilize/memorize if needed.
 	if (CastF == FLAG_REQUEST) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Casting]: Request.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Casting]: Request.", GetTickCount64());
 		}
 		CastF = FLAG_PROGRESS1;
 		if (StopF == FLAG_COMPLETE) {
@@ -1095,12 +1081,12 @@ void CastHandle()
 			if ((CastingE == CAST_SUCCESS && CastW != RECAST_LAND) || (CastingE == CAST_COLLAPSE) || (CastingE == CAST_FIZZLE) ||
 				(CastingE == CAST_INTERRUPTED) || (CastingE == CAST_RECOVER) || (CastingE == CAST_RESIST)) {
 				if (DEBUGGING) {
-					WriteChatf("[%I64u] MQ2Cast:[Casting]: AutoRecast [%d].", GetTickCount642(), CastingE);
+					WriteChatf("[%I64u] MQ2Cast:[Casting]: AutoRecast [%d].", GetTickCount64(), CastingE);
 				}
 				if (CastW != RECAST_ZERO && !TargC) {
 					TargC = (pTarget) ? ((PSPAWNINFO)pTarget)->SpawnID : 0;
 				}
-				CastM = GetTickCount642() + DELAY_CAST;
+				CastM = GetTickCount64() + DELAY_CAST;
 				CastF = FLAG_REQUEST;
 			}
 		}
@@ -1116,8 +1102,8 @@ void CastHandle()
 
 	// evaluate if we are taking too long, or immobilize/memorize event failed.
 	if (CastF != FLAG_COMPLETE) {
-		if (StopE == DONE_ABORTED || MemoE == DONE_ABORTED || GetTickCount642()>CastM) {
-			WriteChatf("[%I64u] MQ2Cast:[Casting]: Aborting! (%s)", GetTickCount642(), StopE == DONE_ABORTED ? "StopE" : (MemoE == DONE_ABORTED ? "MemoE" : "CastM"));
+		if (StopE == DONE_ABORTED || MemoE == DONE_ABORTED || GetTickCount64()>CastM) {
+			WriteChatf("[%I64u] MQ2Cast:[Casting]: Aborting! (%s)", GetTickCount64(), StopE == DONE_ABORTED ? "StopE" : (MemoE == DONE_ABORTED ? "MemoE" : "CastM"));
 			CastF = FLAG_PROGRESS4;
 			CastE = CAST_NOTREADY;
 		}
@@ -1125,7 +1111,7 @@ void CastHandle()
 
 	// waiting for opportunity to start casting, end if conditions not favorables.
 	if (CastF == FLAG_PROGRESS1) {
-		if (pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible()) {
+		if (pCastingWnd && pCastingWnd->IsVisible()) {
 			return; // casting going on
 		}
 		CastingC = CastS->ID;
@@ -1167,13 +1153,13 @@ void CastHandle()
 	//this is where it breaks
 	if (CastF == FLAG_PROGRESS2) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Casting]: Cast.", GetTickCount642());
+			WriteChatf("[%I64u] MQ2Cast:[Casting]: Cast.", GetTickCount64());
 		}
 		Success(CastS);
 		//ItemHandle(true);
 		CastF = FLAG_PROGRESS3;
 		CastE = DONE_PROGRESS;
-		CastingT = GetTickCount642() + CastT + 250 + (pConnection->Last) * 4;
+		CastingT = GetTickCount64() + CastT + 250 + (pConnection->Last) * 4;
 		CastingE = DONE_PROGRESS;
 		CastingC = CastS->ID;
 		if ((long)GetCharInfo()->pSpawn->CastingData.SpellID>0) {
@@ -1240,10 +1226,10 @@ PLUGIN_API VOID CastDebug(PSPAWNINFO pChar, PCHAR Cmd)
 PLUGIN_API VOID CastCommand(PSPAWNINFO pChar, PCHAR Cmd)
 {
 	Resultat = CAST_DISTRACTED;
-	if (!gbInZone || Flags() || Paused() || (pSpellBookWnd && (PCSIDLWND)pSpellBookWnd->IsVisible())) {
+	if (!gbInZone || Flags() || Paused() || (pSpellBookWnd && pSpellBookWnd->IsVisible())) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Casting]: Complete. [%d][%s%s%s%s]", GetTickCount642(), Resultat,
-				gbInZone ? " ZONE " : "", Flags() ? " FLAGS " : "", Paused() ? " PAUSED " : "", (pSpellBookWnd && (PCSIDLWND)pSpellBookWnd->IsVisible()) ? " SHOW " : "");
+			WriteChatf("[%I64u] MQ2Cast:[Casting]: Complete. [%d][%s%s%s%s]", GetTickCount64(), Resultat,
+				gbInZone ? " ZONE " : "", Flags() ? " FLAGS " : "", Paused() ? " PAUSED " : "", (pSpellBookWnd && pSpellBookWnd->IsVisible()) ? " SHOW " : "");
 		}
 		return;
 	}
@@ -1297,7 +1283,7 @@ PLUGIN_API VOID CastCommand(PSPAWNINFO pChar, PCHAR Cmd)
 	}
 	else if (TargI) {
 		if (PSPAWNINFO Target = (PSPAWNINFO)GetSpawnByID(TargI)) {
-			*(PSPAWNINFO*)ppTarget = Target;
+			pTarget = Target;
 		}
 		else {
 			Resultat = CAST_NOTARGET;
@@ -1323,7 +1309,7 @@ PLUGIN_API VOID CastCommand(PSPAWNINFO pChar, PCHAR Cmd)
 	}
 	if (Resultat != CAST_SUCCESS) {
 		if (DEBUGGING) {
-			WriteChatf("[%I64u] MQ2Cast:[Casting]: Complete. [%d]", GetTickCount642(), Resultat);
+			WriteChatf("[%I64u] MQ2Cast:[Casting]: Complete. [%d]", GetTickCount64(), Resultat);
 		}
 		return;
 	}
@@ -1332,10 +1318,10 @@ PLUGIN_API VOID CastCommand(PSPAWNINFO pChar, PCHAR Cmd)
 	CastK = fTYPE;
 	CastT = fTIME;
 	CastS = fFIND;
-	CastM = GetTickCount642() + DELAY_CAST;
+	CastM = GetTickCount64() + DELAY_CAST;
 	strcpy_s(CastN, fNAME);
 	if (DEBUGGING) {
-		WriteChatf("[%I64u] MQ2Cast:[Casting]: Name<%s> Type<%d>.", GetTickCount642(), CastN, CastK);
+		WriteChatf("[%I64u] MQ2Cast:[Casting]: Name<%s> Type<%d>.", GetTickCount64(), CastN, CastK);
 	}
 	CastHandle();
 }
@@ -1346,7 +1332,7 @@ PLUGIN_API VOID DuckCommand(PSPAWNINFO pChar, PCHAR Cmd)
 		if (CastF != FLAG_COMPLETE) {
 			CastR = 0;
 		}
-		if ((pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible()) && CastingLeft()>500) {
+		if ((pCastingWnd && pCastingWnd->IsVisible()) && CastingLeft()>500) {
 			DuckF = FLAG_REQUEST;
 			DuckHandle(DuckF);
 		}
@@ -1378,7 +1364,7 @@ PLUGIN_API VOID MemoCommand(PSPAWNINFO pChar, PCHAR zLine)
 		GetArg(zTemp, zParm, 1, FALSE, FALSE, FALSE, '|');
 		if (PSPELL Search = SpellBook(zTemp)) {
 			if (DEBUGGING) {
-				WriteChatf("[%d] MQ2Cast:[Memorize]: Spell Found.", (long)GetTickCount642());
+				WriteChatf("[%d] MQ2Cast:[Memorize]: Spell Found.", (long)GetTickCount64());
 			}
 			GetArg(zTemp, zParm, 2, FALSE, FALSE, FALSE, '|');
 			long Gem = atoi(&zTemp[(_strnicmp(zTemp, "gem", 3)) ? 0 : 3]) - 1;
@@ -1394,14 +1380,14 @@ PLUGIN_API VOID MemoCommand(PSPAWNINFO pChar, PCHAR zLine)
 		else {
 			CastingX = CAST_UNKNOWN;
 			if (DEBUGGING) {
-				WriteChatf("[%d] MQ2Cast:[Memorize]: Spell Not Found. %d", (long)GetTickCount642(), CastingX);
+				WriteChatf("[%d] MQ2Cast:[Memorize]: Spell Not Found. %d", (long)GetTickCount64(), CastingX);
 			}
 			return;
 		}
 	} while (true);
 
 	for (int sp = 0; sp<NUM_SPELL_GEMS; sp++) {
-		if (SpellToMemorize.SpellId[sp] != 0xFFFFFFFF && SpellToMemorize.SpellId[sp] != GetCharInfo2()->MemorizedSpells[sp]) {
+		if (SpellToMemorize.SpellId[sp] != 0xFFFFFFFF && SpellToMemorize.SpellId[sp] != GetPcProfile()->MemorizedSpells[sp]) {
 			SpellTotal++;
 		}
 	}
@@ -1423,7 +1409,7 @@ PLUGIN_API VOID SpellSetDelete(PSPAWNINFO pChar, PCHAR Cmd)
 	}
 	else {
 		Resultat = CAST_SUCCESS;
-		sprintf_s(INIFileName, "%s\\%s_%s.ini", gszINIPath, EQADDR_SERVERNAME, GetCharInfo()->Name);
+		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
 		WritePrivateProfileString("MQ2Cast(SpellSet)", Cmd, NULL, INIFileName);
 	}
 }
@@ -1438,7 +1424,7 @@ PLUGIN_API VOID SpellSetList(PSPAWNINFO pChar, PCHAR Cmd)
 	PCHAR pKeys = Keys;
 	long Disp = 0;
 	Resultat = CAST_SUCCESS;
-	sprintf_s(INIFileName, "%s\\%s_%s.ini", gszINIPath, EQADDR_SERVERNAME, GetCharInfo()->Name);
+	sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
 	WriteChatf("MQ2Cast:: SpellSet [\ay Listing... \ax].", Disp);
 	GetPrivateProfileString("MQ2Cast(SpellSet)", NULL, "", Keys, MAX_STRING * 10, INIFileName);
 	while (pKeys[0]) {
@@ -1468,7 +1454,7 @@ PLUGIN_API VOID SpellSetMemorize(PSPAWNINFO pChar, PCHAR Cmd)
 	else {
 		char List[MAX_STRING];
 		Resultat = CAST_SUCCESS;
-		sprintf_s(INIFileName, "%s\\%s_%s.ini", gszINIPath, EQADDR_SERVERNAME, GetCharInfo()->Name);
+		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
 		GetPrivateProfileString("MQ2Cast(SpellSet)", Cmd, "", List, MAX_STRING, INIFileName);
 		if (List[0])
 			MemoCommand(GetCharInfo()->pSpawn, List);
@@ -1494,9 +1480,9 @@ PLUGIN_API VOID SpellSetSave(PSPAWNINFO pChar, PCHAR Cmd)
 	char zTmp[MAX_STRING];
 	long find = 0;
 	for (int g = 0; g<NUM_SPELL_GEMS; g++)
-		if ((long)GetCharInfo2()->MemorizedSpells[g]>0) {
+		if ((long)GetPcProfile()->MemorizedSpells[g]>0) {
 			if (strstr(zGem, ListGems[g])) {
-				sprintf_s(zTmp, "%d|%d", GetCharInfo2()->MemorizedSpells[g], g + 1);
+				sprintf_s(zTmp, "%d|%d", GetPcProfile()->MemorizedSpells[g], g + 1);
 				if (find) {
 					strcat_s(zLst, " ");
 				}
@@ -1507,14 +1493,14 @@ PLUGIN_API VOID SpellSetSave(PSPAWNINFO pChar, PCHAR Cmd)
 	Resultat = CAST_UNKNOWN;
 	if (find) {
 		Resultat = CAST_SUCCESS;
-		sprintf_s(INIFileName, "%s\\%s_%s.ini", gszINIPath, EQADDR_SERVERNAME, GetCharInfo()->Name);
+		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
 		WritePrivateProfileString("MQ2Cast(SpellSet)", Cmd, zLst, INIFileName);
 	}
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=//
 
-PLUGIN_API VOID InitializePlugin(VOID)
+PLUGIN_API void InitializePlugin()
 {
 	CHAR BetaSwitch[MAX_STRING] = { 0 };
 	if (GetPrivateProfileString("Settings", "Normal", "", BetaSwitch, MAX_STRING, INIFileName)) {
@@ -1554,9 +1540,9 @@ PLUGIN_API VOID InitializePlugin(VOID)
 	aCastEvent(LIST289, CAST_OUTDOORS, "You must have both the Horse Models and your current Luclin Character Model enabled to summon a mount#*#");
 	aCastEvent(LIST264, CAST_RECOVER, "You haven't recovered yet#*#");
 #if defined(UFEMU) || defined(ROF2EMU)
-    aCastEvent(LIST289, CAST_RESIST, "Your target resisted the#*#spell#*#");
+	aCastEvent(LIST289, CAST_RESIST, "Your target resisted the#*#spell#*#");
 #else
-    aCastEvent(LIST289, CAST_RESIST, "#*# resisted your #*#!");
+	aCastEvent(LIST289, CAST_RESIST, "#*# resisted your #*#!");
 #endif
 	aCastEvent(LIST289, CAST_RECOVER, "Spell recovery time not yet met#*#");
 	aCastEvent(LIST289, CAST_RESIST, "Your target resisted the#*#spell#*#");
@@ -1597,7 +1583,7 @@ PLUGIN_API void SetGameState(unsigned long ulGameState)
 	}
 }
 
-PLUGIN_API VOID ShutdownPlugin(VOID)
+PLUGIN_API void ShutdownPlugin()
 {
 	RemoveMQ2Data("Cast");
 	delete pCastType;
@@ -1611,7 +1597,7 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 	RemoveCommand("/sss");
 }
 
-PLUGIN_API VOID OnEndZone(VOID)
+PLUGIN_API void OnEndZone()
 {
 	Reset();
 	CastingO = NOID;
@@ -1628,26 +1614,13 @@ PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 	if (gbInZone) {
 		if (strchr(szLine, '\x12')) {
 			// Message includes link (item tags/spell), must clean first
-			int len = strlen(Line);
-			if (char *szClean = (char *)LocalAlloc(LPTR, len + 64)) {
-				strncpy_s(szClean, len + 64, Line, len);
-				CXStr out;
-#if defined(ROF2EMU) || defined(UFEMU)
-				if (CXStr *str = CleanItemTags(&out, szClean)) {
-#else
-				if (CXStr *str = CleanItemTags(&out, szClean, false)) {
-#endif
-					GetCXStr(str->Ptr, szClean, len + 64);
-				}
-				strncpy_s(szLine, _countof(szLine), szClean, len + 64);
-				LocalFree(szClean);
-			}
+			strcpy_s(szLine, CleanItemTags(szLine, false).c_str());
 		}
 
 		if (CastingC != NOID && !Twisting) {
 			Parsed = false;
 			if (DEBUGGING) {
-				WriteChatf("[%I64u] OnIncomingChat:: ChatLine: %s Color: %d", GetTickCount642(), szLine, Color);
+				WriteChatf("[%I64u] OnIncomingChat:: ChatLine: %s Color: %d", GetTickCount64(), szLine, Color);
 			}
 			if (Color == 264) {
 				LIST264.Feed(szLine);
@@ -1669,10 +1642,10 @@ PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 	}
 	return 0;
 }
-PLUGIN_API VOID OnPulse(VOID)
+PLUGIN_API void OnPulse()
 {
-	if (gbInZone && GetTickCount642()>CastingP && GetCharInfo() && GetCharInfo()->pSpawn) {
-		CastingP = GetTickCount642() + DELAY_PULSE;
+	if (gbInZone && GetTickCount64()>CastingP && GetCharInfo() && GetCharInfo()->pSpawn) {
+		CastingP = GetTickCount64() + DELAY_PULSE;
 
 		// evaluate immobile flag and handle immobilize request
 		Immobile = Moving();
@@ -1682,7 +1655,7 @@ PLUGIN_API VOID OnPulse(VOID)
 		CastingD = GetCharInfo()->pSpawn->CastingData.SpellID;
 
 		// casting window currently openened?
-		if (pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible()) {
+		if (pCastingWnd && pCastingWnd->IsVisible()) {
 			Casting = true;
 			if (CastingO == NOID) {
 				CastingO = (pTarget) ? ((long)((PSPAWNINFO)pTarget)->SpawnID) : 0;
@@ -1693,7 +1666,7 @@ PLUGIN_API VOID OnPulse(VOID)
 				CastingE = DONE_PROGRESS;
 				CastingC = CastingD;
 				CastingT = GetCharInfo()->pSpawn->CastingData.SpellETA - GetCharInfo()->pSpawn->TimeStamp +
-					GetTickCount642() + 450 + (pConnection->Last) * 4;
+					GetTickCount64() + 450 + (pConnection->Last) * 4;
 				Success(GetSpellByID(CastingD));
 			}
 
@@ -1731,11 +1704,11 @@ PLUGIN_API VOID OnPulse(VOID)
 				}
 			}
 			// re-evaluate casting timer after cast window close
-			CastingT = GetTickCount642() + 450 + (pConnection->Last) * 2;
+			CastingT = GetTickCount64() + 450 + (pConnection->Last) * 2;
 			Casting = false;
 		}
 		if (CastingE == DONE_PROGRESS) {
-			if (GetTickCount642()>CastingT) {
+			if (GetTickCount64()>CastingT) {
 				CastingE = CAST_SUCCESS;
 			}
 			else if (!Twisting) {
@@ -1764,7 +1737,7 @@ PLUGIN_API VOID OnPulse(VOID)
 			CastingE = DONE_COMPLETE;
 			if (!Twisting) {
 				if (DEBUGGING) {
-					WriteChatf("[%I64u] MQ2Cast:: Casting Complete ID[%d] Result=[%d]", GetTickCount642(), CastingL, CastingX);
+					WriteChatf("[%I64u] MQ2Cast:: Casting Complete ID[%d] Result=[%d]", GetTickCount64(), CastingL, CastingX);
 				}
 				CastTimer(CastingO, CastingC, CastingX); // patches for ae but sound illogicials
 			}
@@ -1776,12 +1749,12 @@ PLUGIN_API VOID OnPulse(VOID)
 		if (CastF == FLAG_COMPLETE) {
 			StopEnding();
 			if (PulseCount) {
-				PITEMINFO pCursor = GetItemFromContents(GetCharInfo2()->pInventoryArray->Inventory.Cursor);
+				PITEMINFO pCursor = GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Cursor);
 				if (PulseCount>5 && !pCursor) {
 					PulseCount = 0;
 					return;
 				}
-				if (GetCharInfo2()->pInventoryArray->Inventory.Cursor && PulseCount) {
+				if (GetPcProfile()->pInventoryArray->Inventory.Cursor && PulseCount) {
 					ClickBack();
 				}
 				if (PulseCount && PulseCount<7) {
@@ -1796,34 +1769,33 @@ void WinClick(CXWnd *Wnd, PCHAR ScreenID, PCHAR ClickNotification, DWORD KeyStat
 {
 	if (Wnd) {
 		if (CXWnd *Child = Wnd->GetChildItem(ScreenID)) {
-			BOOL KeyboardFlags[4];
-			*(DWORD*)&KeyboardFlags = *(DWORD*)&((PCXWNDMGR)pWndMgr)->KeyboardFlags;
-			*(DWORD*)&((PCXWNDMGR)pWndMgr)->KeyboardFlags = KeyState;
+			bool KeyboardFlags[4];
+			*(DWORD*)&KeyboardFlags = *(DWORD*)&pWndMgr->KeyboardFlags;
+			*(DWORD*)&pWndMgr->KeyboardFlags = KeyState;
 			SendWndClick2(Child, ClickNotification);
-			*(DWORD*)&((PCXWNDMGR)pWndMgr)->KeyboardFlags = *(DWORD*)&KeyboardFlags;
+			*(DWORD*)&pWndMgr->KeyboardFlags = *(DWORD*)&KeyboardFlags;
 		}
 	}
-	return;
 }
 
 void ClickBack()
 {
-	if (!GetCharInfo2()->pInventoryArray->Inventory.Cursor || (pCastingWnd && (PCSIDLWND)pCastingWnd->IsVisible()) ||
-		(pSpellBookWnd && (PCSIDLWND)pSpellBookWnd->IsVisible())) {
+	if (!GetPcProfile()->pInventoryArray->Inventory.Cursor || (pCastingWnd && pCastingWnd->IsVisible()) ||
+		(pSpellBookWnd && pSpellBookWnd->IsVisible())) {
 		return;
 	}
-	if (GetCharInfo2()->pInventoryArray->Inventory.Cursor && PulseCount) {
-		PITEMINFO pCursor = GetItemFromContents(GetCharInfo2()->pInventoryArray->Inventory.Cursor);
+	if (GetPcProfile()->pInventoryArray->Inventory.Cursor && PulseCount) {
+		PITEMINFO pCursor = GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Cursor);
 		if (pCursor && pCursor->Type == ITEMTYPE_PACK) {
-			//if(GetCharInfo2()->pInventoryArray->Inventory.Cursor->Item->Type==ITEMTYPE_PACK) {
+			//if(GetPcProfile()->pInventoryArray->Inventory.Cursor->Item->Type==ITEMTYPE_PACK) {
 			WriteChatf("Pack Type");
 			WinClick((CXWnd*)pInventoryWnd, "InvSlot30", "leftmouseup", 0);
 			PulseCount = 1;
 			return;
 		}
-		PITEMINFO pCursor2 = GetItemFromContents(GetCharInfo2()->pInventoryArray->Inventory.Cursor);
+		PITEMINFO pCursor2 = GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Cursor);
 		if (pCursor2->Type != ITEMTYPE_PACK) {
-			//if(GetCharInfo2()->pInventoryArray->Inventory.Cursor->Item->Type!=ITEMTYPE_PACK) {    
+			//if(GetPcProfile()->pInventoryArray->Inventory.Cursor->Item->Type!=ITEMTYPE_PACK) {
 			WriteChatf("Not a pack");
 			WinClick((CXWnd*)pInventoryWnd, "IW_CharacterView", "leftmouseup", 0);
 			PulseCount = 0;
