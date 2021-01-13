@@ -545,10 +545,10 @@ bool ItemSearch(PCHAR szItemName, long B, long E)
 		pItem = FindItemByName(szItemName, 1);
 	}
 	if (pItem) {
-		fSLOT = pItem->GetGlobalIndex().Index.GetSlot(0);
+		fSLOT = pItem->GetItemLocation().GetIndex().GetSlot(0);
 		fITEM = pItem;
 		fPACK = NULL;
-		if (CONTENTS* pPack = FindItemBySlot(pItem->GetGlobalIndex().Index.GetSlot(0))) {
+		if (CONTENTS* pPack = FindItemBySlot(fSLOT)) {
 			if (GetItemFromContents(pPack)->Type == ITEMTYPE_PACK) {
 				fPACK = pPack;
 			}
@@ -1749,12 +1749,12 @@ PLUGIN_API void OnPulse()
 		if (CastF == FLAG_COMPLETE) {
 			StopEnding();
 			if (PulseCount) {
-				PITEMINFO pCursor = GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Cursor);
+				auto pCursor = GetPcProfile()->GetInventorySlot(InvSlot_Cursor);
 				if (PulseCount>5 && !pCursor) {
 					PulseCount = 0;
 					return;
 				}
-				if (GetPcProfile()->pInventoryArray->Inventory.Cursor && PulseCount) {
+				if (pCursor && PulseCount) {
 					ClickBack();
 				}
 				if (PulseCount && PulseCount<7) {
@@ -1780,28 +1780,21 @@ void WinClick(CXWnd *Wnd, PCHAR ScreenID, PCHAR ClickNotification, DWORD KeyStat
 
 void ClickBack()
 {
-	if (!GetPcProfile()->pInventoryArray->Inventory.Cursor || (pCastingWnd && pCastingWnd->IsVisible()) ||
+	auto pCursor = GetPcProfile()->GetInventorySlot(InvSlot_Cursor);
+	if (!pCursor || (pCastingWnd && pCastingWnd->IsVisible()) ||
 		(pSpellBookWnd && pSpellBookWnd->IsVisible())) {
 		return;
 	}
-	if (GetPcProfile()->pInventoryArray->Inventory.Cursor && PulseCount) {
-		PITEMINFO pCursor = GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Cursor);
-		if (pCursor && pCursor->Type == ITEMTYPE_PACK) {
-			//if(GetPcProfile()->pInventoryArray->Inventory.Cursor->Item->Type==ITEMTYPE_PACK) {
+	if (pCursor && PulseCount) {
+		if (pCursor->IsContainer()) {
 			WriteChatf("Pack Type");
 			WinClick((CXWnd*)pInventoryWnd, "InvSlot30", "leftmouseup", 0);
 			PulseCount = 1;
-			return;
-		}
-		PITEMINFO pCursor2 = GetItemFromContents(GetPcProfile()->pInventoryArray->Inventory.Cursor);
-		if (pCursor2->Type != ITEMTYPE_PACK) {
-			//if(GetPcProfile()->pInventoryArray->Inventory.Cursor->Item->Type!=ITEMTYPE_PACK) {
+		} else {
 			WriteChatf("Not a pack");
 			WinClick((CXWnd*)pInventoryWnd, "IW_CharacterView", "leftmouseup", 0);
 			PulseCount = 0;
-			return;
 		}
-		return;
 	}
 }
 
