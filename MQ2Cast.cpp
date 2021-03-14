@@ -711,8 +711,8 @@ void Path(PCHAR zFormat, ...)
 class MQ2CastType *pCastType = 0;
 class MQ2CastType : public MQ2Type
 {
-private:
 	char Temps[MAX_STRING];
+
 public:
 	enum CastMembers {
 		Active = 1,
@@ -832,17 +832,11 @@ public:
 		Dest.Ptr = Temps;
 		return true;
 	}
-	bool ToString(MQVarPtr VarPtr, PCHAR Destination) {
+
+	bool ToString(MQVarPtr VarPtr, PCHAR Destination) override {
 		strcpy_s(Destination, MAX_STRING, "TRUE");
 		return true;
 	}
-	bool FromData(MQVarPtr& VarPtr, MQTypeVar& Source) {
-		return false;
-	}
-	virtual bool FromString(MQVarPtr& VarPtr, const char* Source) override {
-		return false;
-	}
-	~MQ2CastType() {}
 };
 
 bool dataCast(const char* szName, MQTypeVar& Dest)
