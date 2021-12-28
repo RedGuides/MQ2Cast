@@ -26,13 +26,14 @@
 //    Fixed compile typecast warning.
 // 11.3 - SwiftyMUSE 11-17-2019 - Fixed: Casting interrupted identification on Live
 // 11.4 - EqMule 06-01-2020 - Fixed: Casting fizzled and interrupted identifications on Live
+// 11.5 - AmericanNero 12/27/2021 - Fixed typo "powerfull" and Blech include
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=//
 #include <mq/Plugin.h>
 
-#include "../../Blech/Blech.h"
+#include <Blech/Blech.h>
 
 PreSetup("MQ2Cast");
-PLUGIN_VERSION(11.4);
+PLUGIN_VERSION(11.5);
 
 bool DEBUGGING = false;
 
@@ -1548,7 +1549,7 @@ PLUGIN_API void InitializePlugin()
 	aCastEvent(LIST289, CAST_TAKEHOLD, "#*#spell did not take hold on#*#(Blocked by#*#");
 	aCastEvent(LIST289, CAST_TAKEHOLD, "Your spell did not take hold#*#");
 	aCastEvent(LIST289, CAST_TAKEHOLD, "Your spell would not have taken hold#*#");
-	aCastEvent(LIST289, CAST_TAKEHOLD, "Your spell is too powerfull for your intended target#*#");
+	aCastEvent(LIST289, CAST_TAKEHOLD, "Your spell is too powerful for your intended target#*#");
 	aCastEvent(LIST289, CAST_TAKEHOLD, "You need to be in a more open area to summon a mount#*#");
 	aCastEvent(LIST289, CAST_TAKEHOLD, "You can only summon a mount on dry land#*#");
 	aCastEvent(LIST289, CAST_TAKEHOLD, "This pet may not be made invisible#*#");
