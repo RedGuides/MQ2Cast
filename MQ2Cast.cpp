@@ -181,11 +181,11 @@ PCHAR         ListGems[] = { "1","2","3","4","5","6","7","8","9","A","B","C","D"
 void __stdcall CastEvent(unsigned int ID, void *pData, PBLECHVALUE pValues)
 {
 	Parsed = true;
-	if (CastingE<(long)pData) {
-		CastingE = (long)pData;
+	if (CastingE<(long)(intptr_t)pData) {
+		CastingE = (long)(intptr_t)pData;
 	}
 	if (DEBUGGING) {
-		WriteChatf("[%I64u] MQ2Cast:[OnChat]: Result=[%d] Called=[%d].", GetTickCount64(), CastingE, (long)pData);
+		WriteChatf("[%I64u] MQ2Cast:[OnChat]: Result=[%d] Called=[%d].", GetTickCount64(), CastingE, (long)(intptr_t)pData);
 	}
 }
 
@@ -1004,8 +1004,7 @@ void MemoHandle()
 					WriteChatf("[%I64u] MQ2Cast:[Memorize]: Spell(s).", GetTickCount64());
 				}
 				MemoF = FLAG_PROGRESS2;
-				DWORD Favorite = (DWORD)&SpellToMemorize;
-				pSpellBookWnd->MemorizeSet((int*)Favorite, NUM_SPELL_GEMS);
+				pSpellBookWnd->MemorizeSet((int*)&SpellToMemorize, NUM_SPELL_GEMS);
 			}
 			if (StopE == DONE_ABORTED || GetTickCount64()>MemoM) {
 				MemoE = DONE_ABORTED;
