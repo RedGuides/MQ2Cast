@@ -345,8 +345,8 @@ bool GEMReady(LONG ID)
 
 bool GiftOfMana()
 {
-	for (unsigned long nBuff = 0; nBuff < 35; nBuff++) {
-		if (PSPELL pSpell = GetSpellByID(GetPcProfile()->ShortBuff[nBuff].SpellID)) {
+	for (unsigned long nBuff = 0; nBuff < NUM_SHORT_BUFFS; nBuff++) {
+		if (PSPELL pSpell = GetSpellByID(GetPcProfile()->GetTempEffect(nBuff).SpellID)) {
 			if (!_stricmp("Gift of Mana", pSpell->Name)) {
 				return true;
 			}
