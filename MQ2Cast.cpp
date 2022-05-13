@@ -1403,7 +1403,7 @@ PLUGIN_API VOID SpellSetDelete(PSPAWNINFO pChar, PCHAR Cmd)
 	}
 	else {
 		Resultat = CAST_SUCCESS;
-		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
+		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, GetServerShortName(), pLocalPC->Name);
 		WritePrivateProfileString("MQ2Cast(SpellSet)", Cmd, NULL, INIFileName);
 	}
 }
@@ -1418,7 +1418,7 @@ PLUGIN_API VOID SpellSetList(PSPAWNINFO pChar, PCHAR Cmd)
 	PCHAR pKeys = Keys;
 	long Disp = 0;
 	Resultat = CAST_SUCCESS;
-	sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
+	sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, GetServerShortName(), pLocalPC->Name);
 	WriteChatf("MQ2Cast:: SpellSet [\ay Listing... \ax].", Disp);
 	GetPrivateProfileString("MQ2Cast(SpellSet)", NULL, "", Keys, MAX_STRING * 10, INIFileName);
 	while (pKeys[0]) {
@@ -1448,10 +1448,10 @@ PLUGIN_API VOID SpellSetMemorize(PSPAWNINFO pChar, PCHAR Cmd)
 	else {
 		char List[MAX_STRING];
 		Resultat = CAST_SUCCESS;
-		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
+		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, GetServerShortName(), pLocalPC->Name);
 		GetPrivateProfileString("MQ2Cast(SpellSet)", Cmd, "", List, MAX_STRING, INIFileName);
 		if (List[0])
-			MemoCommand(GetCharInfo()->pSpawn, List);
+			MemoCommand(pLocalPlayer, List);
 	}
 }
 
@@ -1487,7 +1487,7 @@ PLUGIN_API VOID SpellSetSave(PSPAWNINFO pChar, PCHAR Cmd)
 	Resultat = CAST_UNKNOWN;
 	if (find) {
 		Resultat = CAST_SUCCESS;
-		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, EQADDR_SERVERNAME, GetCharInfo()->Name);
+		sprintf_s(INIFileName, "%s\\%s_%s.ini", gPathConfig, GetServerShortName(), pLocalPC->Name);
 		WritePrivateProfileString("MQ2Cast(SpellSet)", Cmd, zLst, INIFileName);
 	}
 }
