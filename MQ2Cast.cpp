@@ -1614,7 +1614,7 @@ PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 		if (CastingC != NOID && !Twisting) {
 			Parsed = false;
 			if (DEBUGGING) {
-				WriteChatf("[%I64u] OnIncomingChat:: ChatLine: %s Color: %d", GetTickCount64(), szLine, Color);
+				WriteChatf("\arMQ2Cast::[%I64u] OnIncomingChat:: ChatLine: %s Color: %d", GetTickCount64(), szLine, Color);
 			}
 			if (Color == 264) {
 				LIST264.Feed(szLine);
