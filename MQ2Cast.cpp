@@ -562,7 +562,7 @@ bool ItemSearch(PCHAR szItemName, long B, long E)
 	return false;
 }
 bool SpellFind(PCHAR szSpellorAltorItemName, PCHAR szTYPE) {
-	VePointer<CONTENTS> n;
+	ItemPtr n;
 	if (szSpellorAltorItemName[0]) {
 		// is it an alt ability?
 		if (!szTYPE[0] || !_strnicmp(szTYPE, "alt", 3)) {
