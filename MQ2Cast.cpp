@@ -416,9 +416,6 @@ bool Moving()
 	return (!gbMoving && (!ImmobileT || MyTimer>ImmobileT));
 }
 
-CXWnd*TributeMasterWnd = 0;
-CXWnd*GuildBankWnd = 0;
-
 BOOL Paused()
 {
 	if (BardClass()) {
@@ -439,21 +436,11 @@ BOOL Paused()
 	if (pGiveWnd && pGiveWnd->IsVisible()) {
 		return true;
 	}
-	//calling Open is super cpu expensive
-	//if (Open("TributeMasterWnd")) {
-	//I needed to change this cause it slows us down A LOT!
-	if (!TributeMasterWnd) {
-		TributeMasterWnd = FindMQ2Window("TributeMasterWnd");
-	} else {
-		if(TributeMasterWnd->IsVisible())
-			return true;
+	if (pTributeMasterWnd && pTributeMasterWnd->IsVisible()) {
+		return true;
 	}
-	if (!GuildBankWnd) {
-		GuildBankWnd = FindMQ2Window("GuildBankWnd");
-	}
-	else {
-		if (GuildBankWnd->IsVisible())
-			return true;
+	if (pGuildBankWnd && pGuildBankWnd->IsVisible()) {
+		return true;
 	}
 	return false;
 }
@@ -1572,8 +1559,6 @@ PLUGIN_API void SetGameState(unsigned long ulGameState)
 		cPendingEq = false;
 		ulTimer = 0;
 		ulTimerR = 0;
-		TributeMasterWnd = 0;
-		GuildBankWnd = 0;
 	}
 }
 
@@ -1790,10 +1775,4 @@ void ClickBack()
 			PulseCount = 0;
 		}
 	}
-}
-
-PLUGIN_API VOID OnReloadUI()
-{
-	TributeMasterWnd = 0;
-	GuildBankWnd = 0;
 }
